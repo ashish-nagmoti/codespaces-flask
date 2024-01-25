@@ -1,0 +1,38 @@
+# app.py
+
+from flask import Flask, render_template, request, redirect, url_for
+import pygame
+
+app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Replace with a secure secret key
+
+# Initialize Pygame (call only once)
+pygame.init()
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/submit', methods=['POST'])
+def submit():
+    name = request.form['name']
+    time_taken = float(request.form['time'])
+
+    # Calculate marks based on time
+    marks = calculate_marks(time_taken)
+
+    # You can store the user's name and marks in a database or file
+    # For simplicity, let's print them to the console
+    print(f"Name: {name}, Marks: {marks}")
+
+    return redirect(url_for('index'))
+
+def calculate_marks(time_taken):
+    # Implement a simple marking system based on time taken
+    # You can customize this based on your requirements
+    # Placeholder for demonstration purposes
+    marks = max(0, 100 - time_taken)  # Example: Higher marks for faster completion
+    return marks
+
+if __name__ == '__main__':
+    app.run(debug=True)

@@ -1,0 +1,164 @@
+<!-- templates/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sliding Puzzle</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        canvas {
+            border: 1px solid #000;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="puzzleCanvas" width="400" height="300"></canvas>
+    <script>
+        const canvas = document.getElementById('puzzleCanvas');
+        const ctx = canvas.getContext('2d');
+        const pieces = [];
+        const pieceWidth = canvas.width / 4;
+        const pieceHeight = canvas.height / 3;
+        let selectedPiece = null;
+
+        function generateRandomPuzzle() {
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 4; col++) {
+                    pieces.push({
+                        row,
+                        col,
+                        x: col * pieceWidth,
+                        y: row * pieceHeight,
+                        width: pieceWidth,
+                        height: pieceHeight,
+                        color: getRandomColor(),
+                    });
+                }
+            }
+
+            shuffleArray(pieces);
+        }
+
+        function drawPuzzle() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (const piece of pieces) {
+                ctx.fillStyle = piece.color;
+                ctx.fillRect(piece.x, piece.y, piece.width, piece.height);
+            }
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function handleMouseDown(e) {
+            const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+            const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+
+            for (const piece of pieces) {
+                if (
+                    mouseX >= piece.x &&
+                    mouseX <= piece.x + piece.width &&
+                    mouseY >= piece.y &&
+                    mouseY <= piece.y + piece.height
+                ) {
+                    selectedPiece = piece;
+                    break;
+                }
+            }
+        }
+
+        function handleMouseUp() {
+            if (selectedPiece) {
+                checkAndMovePiece();
+                selectedPiece = null;
+                checkPuzzleSolved();
+            }
+        }
+
+        function handleMouseMove(e) {
+            if (selectedPiece) {
+                const mouseX = e.clientX - canvas.getBoundingClientRect().left;
+                const mouseY = e.clientY - canvas.getBoundingClientRect().top;
+
+                selectedPiece.x = mouseX - selectedPiece.width / 2;
+                selectedPiece.y = mouseY - selectedPiece.height / 2;
+
+                drawPuzzle();
+            }
+        }
+
+        function checkAndMovePiece() {
+            const emptyPiece = pieces.find(piece => piece.color === 'white');
+
+            if (isEmptyPieceAdjacent(selectedPiece, emptyPiece)) {
+                // Swap positions
+                [selectedPiece.x, selectedPiece.y, emptyPiece.x, emptyPiece.y] =
+                    [emptyPiece.x, emptyPiece.y, selectedPiece.x, selectedPiece.y];
+
+                // Update piece positions
+                [selectedPiece.row, selectedPiece.col, emptyPiece.row, emptyPiece.col] =
+                    [emptyPiece.row, emptyPiece.col, selectedPiece.row, selectedPiece.col];
+
+                drawPuzzle();
+            }
+        }
+
+        function isEmptyPieceAdjacent(piece, emptyPiece) {
+            const dx = Math.abs(piece.col - emptyPiece.col);
+            const dy = Math.abs(piece.row - emptyPiece.row);
+
+            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        }
+
+        function checkPuzzleSolved() {
+            let isSolved = true;
+
+            for (let i = 0; i < pieces.length - 1; i++) {
+                const piece = pieces[i];
+                const correctX = piece.col * pieceWidth;
+                const correctY = piece.row * pieceHeight;
+
+                if (Math.abs(piece.x - correctX) > 5 || Math.abs(piece.y - correctY) > 5) {
+                    isSolved = false;
+                    break;
+                }
+            }
+
+            if (isSolved) {
+                alert('Congratulations! Puzzle solved!');
+            }
+        }
+
+        canvas.addEventListener('mousedown', handleMouseDown);
+        canvas.addEventListener('mouseup', handleMouseUp);
+        canvas.addEventListener('mousemove', handleMouseMove);
+
+        generateRandomPuzzle();
+        drawPuzzle();
+    </script>
+</body>
+</html>
